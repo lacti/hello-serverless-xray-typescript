@@ -18,5 +18,8 @@
     "webpack": "^4.41.0"
   },
   "author": "jaeyoung.choi <lactrious@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "optionalDependencies": {
+    "aws-sdk": "2.488.0"
+  }
 }
