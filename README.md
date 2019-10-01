@@ -180,10 +180,13 @@ We can capture a segment of promise using `captureAsyncFunc`.
 
 There are two `the request of a dependency is an expression` warnings when we execute `webpack` via `sls package`. It is because they use dynamic `require` in their codes.
 
-1. `call_capture.js` requires the specified _aws client library_ to exclude X-Ray capture via `appendAWSWhitelist` function.
+1. `call_capture.js` requires the specified attributes to capture in requests of `AWSClient` using `appendAWSWhitelist` function.
 2. `colors.js` requires the `color-theme` library in runtime. I think we will not use it because it is required from `winston` that is required from `aws-xray-sdk-core`.
 
-These warnings can be ignored with simple regular expressions.
+`call_capture.js` requires `aws_whitelist.json` file in its package at runtime so we put it into a bundle. But `Webpack4` can includes these external json file into a bundle automatically without any configurations! And we give a JSON object into `appendAWSWhitelist` istead of a path to `require` to avoid `require` in runtime that breaks `Webpack`. So we can ignore the first issue.
+And, we will not change `color-theme` of `winston` in runtime. Let's ignore the second issue, too.
+
+Now, we can ignore these warnings by simple regular expressions.
 
 📄 webpack.config.js
 
@@ -199,9 +202,10 @@ These warnings can be ignored with simple regular expressions.
   module.exports = {
     mode: slsw.lib.webpack.isLocal ? "development" : "production",
     entry: slsw.lib.entries,
-        // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
-        { test: /\.tsx?$/, loader: "ts-loader" }
-      ]
+
+    externals: [/aws-sdk/],
+    module: {
+      rules: [{ test: /\.tsx?$/, loader: "ts-loader" }]
 +   },
 +   stats: {
 +     warningsFilter: warning => {
@@ -211,7 +215,6 @@ These warnings can be ignored with simple regular expressions.
 +     }
     }
   };
-
 ```
 
 ### Deploy and check it
